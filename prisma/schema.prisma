@@ -1,0 +1,478 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// USER & PROFILE
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+  conversations Conversation[]
+  progress      ProgressItem[]
+  materials     GeneratedMaterial[]
+  gapReports    GapReport[]
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originCountry     String
+  nationality       String?
+  nativeLanguage    String
+  otherLanguages    String[]
+
+  familyStatus      FamilyStatus
+  partnerName       String?
+  dependents        Int       @default(0)
+  dependentAges     Int[]
+
+  educationLevel    EducationLevel
+  fieldOfStudy      String?
+  currentOccupation String?
+  skills            String[]
+  yearsExperience   Int?
+  certifications    String[]
+
+  targetMunicipality String
+  timeline           RelocationTimeline
+  budget             BudgetRange?
+  housingPreference  HousingPreference?
+
+  interests     String[]
+  motivations   String[]
+  concerns      String[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum FamilyStatus {
+  SINGLE
+  WITH_PARTNER
+  WITH_PARTNER_AND_CHILDREN
+  SINGLE_WITH_CHILDREN
+}
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  VOCATIONAL
+  BACHELORS
+  MASTERS
+  DOCTORATE
+  OTHER
+}
+
+enum RelocationTimeline {
+  IMMEDIATELY
+  WITHIN_3_MONTHS
+  WITHIN_6_MONTHS
+  WITHIN_1_YEAR
+  EXPLORING
+}
+
+enum BudgetRange {
+  UNDER_500
+  FROM_500_TO_800
+  FROM_800_TO_1200
+  OVER_1200
+}
+
+enum HousingPreference {
+  RENTAL_APARTMENT
+  RENTAL_HOUSE
+  BUY_APARTMENT
+  BUY_HOUSE
+  TEMPORARY
+  NO_PREFERENCE
+}
+
+// ============================================================
+// EMPLOYMENT DOMAIN
+// ============================================================
+
+model JobListing {
+  id              String         @id @default(cuid())
+  title           String
+  employer        String
+  description     String
+  requirements    String[]
+  skills          String[]
+  sector          String
+  municipality    String
+  salaryRange     String?
+  employmentType  EmploymentType
+  languageReqs    String[]
+  contactInfo     String?
+  sourceUrl       String?
+  confidenceLevel ConfidenceLevel
+  isActive        Boolean        @default(true)
+  postedAt        DateTime       @default(now())
+  expiresAt       DateTime?
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  SEASONAL
+  CONTRACT
+  ENTREPRENEURSHIP
+}
+
+model MarketGap {
+  id               String          @id @default(cuid())
+  title            String
+  description      String
+  sector           String
+  municipality     String
+  demandLevel      DemandLevel
+  requiredSkills   String[]
+  potentialIncome  String?
+  supportAvailable String[]
+  confidenceLevel  ConfidenceLevel
+  source           String?
+}
+
+enum DemandLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// ============================================================
+// HOUSING DOMAIN
+// ============================================================
+
+model HousingListing {
+  id              String          @id @default(cuid())
+  title           String
+  description     String
+  type            HousingType
+  municipality    String
+  address         String?
+  rent            Decimal?
+  salePrice       Decimal?
+  size            Int?
+  rooms           Int?
+  amenities       String[]
+  availableFrom   DateTime?
+  contactInfo     String?
+  sourceUrl       String?
+  imageUrls       String[]
+  confidenceLevel ConfidenceLevel
+  isActive        Boolean         @default(true)
+}
+
+enum HousingType {
+  APARTMENT_RENTAL
+  HOUSE_RENTAL
+  APARTMENT_SALE
+  HOUSE_SALE
+  ROOM_RENTAL
+  TEMPORARY
+}
+
+model HousingIncentive {
+  id              String          @id @default(cuid())
+  title           String
+  description     String
+  municipality    String
+  amount          String?
+  eligibility     String[]
+  applicationUrl  String?
+  deadline        DateTime?
+  confidenceLevel ConfidenceLevel
+}
+
+// ============================================================
+// INTEGRATION DOMAIN
+// ============================================================
+
+model BureaucracyStep {
+  id              String              @id @default(cuid())
+  title           String
+  description     String
+  category        BureaucracyCategory
+  municipality    String?
+  orderIndex      Int
+  estimatedDays   Int?
+  requiredDocs    String[]
+  url             String?
+  tips            String?
+  confidenceLevel ConfidenceLevel
+  dependsOn       String[]
+}
+
+enum BureaucracyCategory {
+  PRE_ARRIVAL
+  FIRST_WEEK
+  FIRST_MONTH
+  FIRST_3_MONTHS
+  ONGOING
+}
+
+model LanguageResource {
+  id              String               @id @default(cuid())
+  title           String
+  description     String
+  type            LanguageResourceType
+  provider        String
+  url             String?
+  cost            String?
+  level           String?
+  municipality    String?
+  online          Boolean              @default(false)
+  confidenceLevel ConfidenceLevel
+}
+
+enum LanguageResourceType {
+  COURSE
+  APP
+  CONVERSATION_GROUP
+  TUTOR
+  SELF_STUDY
+}
+
+model Incentive {
+  id              String          @id @default(cuid())
+  title           String
+  description     String
+  domain          PathwayDomain
+  municipality    String?
+  provider        String
+  amount          String?
+  eligibility     String[]
+  applicationUrl  String?
+  deadline        DateTime?
+  confidenceLevel ConfidenceLevel
+}
+
+// ============================================================
+// COMMUNITY DOMAIN
+// ============================================================
+
+model Event {
+  id              String          @id @default(cuid())
+  title           String
+  description     String
+  date            DateTime
+  endDate         DateTime?
+  location        String
+  municipality    String
+  category        String
+  organizer       String?
+  url             String?
+  isFree          Boolean         @default(true)
+  familyFriendly  Boolean         @default(false)
+  confidenceLevel ConfidenceLevel
+}
+
+model Mentor {
+  id              String          @id @default(cuid())
+  name            String
+  bio             String
+  originCountry   String
+  currentRole     String
+  municipality    String
+  yearsInFinland  Int
+  languages       String[]
+  expertise       String[]
+  availability    String?
+  contactMethod   String?
+  imageUrl        String?
+  confidenceLevel ConfidenceLevel
+}
+
+model HobbyGroup {
+  id              String          @id @default(cuid())
+  name            String
+  description     String
+  category        String
+  municipality    String
+  meetingSchedule String?
+  location        String?
+  contactInfo     String?
+  url             String?
+  familyFriendly  Boolean         @default(false)
+  confidenceLevel ConfidenceLevel
+}
+
+// ============================================================
+// CROSS-CUTTING: SUCCESS STORIES
+// ============================================================
+
+model SuccessStory {
+  id              String          @id @default(cuid())
+  title           String
+  summary         String
+  content         String
+  personName      String
+  originCountry   String
+  municipality    String
+  domains         PathwayDomain[]
+  tags            String[]
+  skills          String[]
+  familyStatus    FamilyStatus?
+  imageUrl        String?
+  publishedAt     DateTime        @default(now())
+  confidenceLevel ConfidenceLevel
+}
+
+// ============================================================
+// CROSS-CUTTING: PROGRESS TRACKING
+// ============================================================
+
+model ProgressItem {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain      PathwayDomain
+  category    String
+  itemId      String?
+  title       String
+  status      ProgressStatus
+  notes       String?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId, domain])
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+// ============================================================
+// AI CONVERSATIONS
+// ============================================================
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// ============================================================
+// GENERATED MATERIALS
+// ============================================================
+
+model GeneratedMaterial {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      MaterialType
+  title     String
+  content   Json
+  domain    PathwayDomain?
+  pdfUrl    String?
+  createdAt DateTime      @default(now())
+
+  @@index([userId])
+}
+
+enum MaterialType {
+  RELOCATION_GUIDE
+  EMPLOYMENT_BRIEF
+  HOUSING_GUIDE
+  INTEGRATION_CHECKLIST
+  COMMUNITY_GUIDE
+  CUSTOM
+}
+
+// ============================================================
+// GAP TRACKING
+// ============================================================
+
+model GapReport {
+  id          String       @id @default(cuid())
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+  domain      PathwayDomain
+  query       String
+  description String?
+  status      GapStatus    @default(IDENTIFIED)
+  createdAt   DateTime     @default(now())
+}
+
+enum GapStatus {
+  IDENTIFIED
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+// ============================================================
+// SHARED ENUMS
+// ============================================================
+
+enum PathwayDomain {
+  EMPLOYMENT
+  HOUSING
+  INTEGRATION
+  COMMUNITY
+}
+
+enum ConfidenceLevel {
+  VERIFIED
+  CURATED
+  INFERRED
+}
+
+// ============================================================
+// MUNICIPALITY DATA
+// ============================================================
+
+model Municipality {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  region       String
+  population   Int?
+  description  String
+  highlights   String[]
+  website      String?
+  contactEmail String?
+  latitude     Float?
+  longitude    Float?
+  imageUrls    String[]
+}
